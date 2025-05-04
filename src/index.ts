@@ -27,6 +27,9 @@ import { initializeDatabase } from "./database/index.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const greetedUsers = new Set<string>();
+const acuerdosPorUsuario = new Map<string, string[]>();
+
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
   const waitTime =
     Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
@@ -166,7 +169,7 @@ const startAgents = async () => {
   }
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
-  if(!isDaemonProcess) {
+  if (!isDaemonProcess) {
     elizaLogger.log("Chat started. Type 'exit' to quit.");
     const chat = startChat(characters);
     chat();
