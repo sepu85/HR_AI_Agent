@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Collabberry HR Agent Chat</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <style>
+    body {
+      background: #f6f8fa;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      padding: 1em 2em;
+      gap: 1em;
+    }
+    header img {
+      height: 40px;
+    }
+    header h1 {
+      font-size: 1.5em;
+      margin: 0;
+      color: #2d3748;
+      letter-spacing: 1px;
+    }
+    #chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2em 0;
+    }
+    #chat {
+      width: 100%;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 2em 1.5em 1em 1.5em;
+      overflow-y: auto;
+      min-height: 350px;
+      margin-bottom: 1em;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2em;
+    }
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.8em;
+    }
+    .message-row.user {
+      flex-direction: row-reverse;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #e2e8f0;
+      border: 2px solid #e2e8f0;
+    }
+    .bubble {
+      max-width: 70%;
+      padding: 0.9em 1.2em;
+      border-radius: 18px;
+      font-size: 1.05em;
+      line-height: 1.5;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      word-break: break-word;
+    }
+    .user .bubble {
+      background: #e6f7ff;
+      color: #1a202c;
+      border-bottom-right-radius: 6px;
+    }
+    .agent .bubble {
+      background: #f0f5ff;
+      color: #2d3748;
+      border-bottom-left-radius: 6px;
+    }
+    .sender-label {
+      font-size: 0.92em;
+      color: #718096;
+      margin-bottom: 0.2em;
+      margin-left: 2px;
+      margin-right: 2px;
+    }
+    #inputRow {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      gap: 0.5em;
+      margin: 0 auto 2em auto;
+    }
+    #input, #username {
+      font-size: 1em;
+      padding: 0.8em;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      outline: none;
+      flex: 1;
+      background: #f9fafb;
+      transition: border 0.2s;
+    }
+    #input:focus, #username:focus {
+      border: 1.5px solid #3182ce;
+    }
+    #username {
+      max-width: 120px;
+      flex: none;
+    }
+    button {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 1.5em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    @media (max-width: 700px) {
+      #chat, #inputRow { max-width: 98vw; }
+      #chat { padding: 1em 0.5em 0.5em 0.5em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="Collabberry Logo">
+    <h1>Collabberry HR Agent Chat</h1>
+  </header>
+  <div id="chat-container">
+    <div id="chat"></div>
+    <div id="inputRow">
+      <input id="input" type="text" placeholder="Type your message..." autocomplete="off" />
+      <input id="username" type="text" placeholder="Your name" style="width: 120px;" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const usernameInput = document.getElementById('username');
+
+    // Make sure this matches your backend endpoint!
+    const AGENT_URL = "http://localhost:3000/TeamAgreementAgent/message";
+
+    // Avatars
+    const agentAvatar = "assets/avatar.png";
+    const userAvatar = "https://ui-avatars.com/api/?name=User&background=3182ce&color=fff&rounded=true&size=128";
+
+    function appendMessage(sender, text, className, avatarUrl) {
+      const row = document.createElement('div');
+      row.className = `message-row ${className}`;
+      row.innerHTML = `
+        <img class="avatar" src="${avatarUrl}" alt="${sender} avatar">
+        <div>
+          <div class="sender-label">${sender}</div>
+          <div class="bubble">${text}</div>
+        </div>
+      `;
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userMessage = input.value.trim();
+      const username = usernameInput.value.trim() || "User";
+      if (!userMessage) return;
+
+      appendMessage(username, userMessage, 'user', userAvatar);
+      input.value = '';
+      input.focus();
+
+      try {
+        const response = await fetch(AGENT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: userMessage,
+            userId: username,
+            userName: username
+          }),
+        });
+
+        if (!response.ok) {
+          appendMessage("HR Agent (AI)", "Error: Could not reach the agent.", "agent", agentAvatar);
+          return;
+        }
+
+        const data = await response.json();
+        const replyText = Array.isArray(data)
+          ? data.map(item => item.text).join('<br><br>')
+          : (data.text || JSON.stringify(data));
+        appendMessage("HR Agent (AI)", replyText, 'agent', agentAvatar);
+      } catch (err) {
+        appendMessage("HR Agent (AI)", "Error: " + err.message, "agent", agentAvatar);
+      }
+    }
+
+    // Allow pressing Enter to send
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+    usernameInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') input.focus();
+    });
+  </script>
+</body>
+</html>
