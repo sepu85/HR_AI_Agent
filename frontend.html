@@ -157,7 +157,7 @@
     const usernameInput = document.getElementById('username');
 
     // Make sure this matches your backend endpoint!
-    const AGENT_URL = "http://localhost:3000/TeamAgreementAgent/message";
+    const AGENT_URL = "http://localhost:3000/TeamAgreementMediator/message";
 
     // Avatars
     const agentAvatar = "assets/avatar.png";
@@ -176,6 +176,16 @@
       chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
+
+    // Show welcome message on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      appendMessage(
+        "HR Agent (AI)",
+        "Hola. Soy tu facilitador de acuerdos de contribución.<br>Te ayudaré a definir tu rol, responsabilidades, expectativas y compensación, y a establecer cómo este acuerdo será validado por tu equipo.<br><b>¿Quieres comenzar definiendo tu rol?</b>",
+        'agent',
+        "assets/avatar.png"
+      );
+    });
 
     async function sendMessage() {
       const userMessage = input.value.trim();
